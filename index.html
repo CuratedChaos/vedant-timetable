@@ -5,80 +5,108 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Smart Timetable</title>
   <link rel="manifest" href="/manifest.json" />
-  <meta name="theme-color" content="#0ff" />
+  <meta name="theme-color" content="#7b2ff7" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&display=swap" rel="stylesheet">
   <style>
-    body {
-      margin: 0;
-      font-family: 'Orbitron', monospace;
-      background-color: #000;
-      color: #0ff;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      min-height: 100vh;
-      overflow-x: hidden;
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:'Poppins',sans-serif;
+      background:linear-gradient(135deg,#7b2ff7,#f107a3,#0fdaf5);
+      background-size:400% 400%;
+      animation:bgMove 12s ease infinite;
+      color:#fff;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      min-height:100vh;
+      overflow-x:hidden;
     }
-    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&display=swap');
-    h1, h2, h3, h4, h5, h6 { font-family: 'Orbitron', monospace; }
-    .clock { position: absolute; top: 15px; right: 20px; font-size: 1.2rem; color: #0ff; }
-    .timer {
-      margin-top: 70px;
-      font-size: 5rem;
-      font-weight: bold;
-      text-shadow: 0 0 20px #0ff, 0 0 40px #0ff;
-      animation: pulse 1.5s infinite;
+    @keyframes bgMove{
+      0%{background-position:0% 50%}
+      50%{background-position:100% 50%}
+      100%{background-position:0% 50%}
     }
-    @keyframes pulse {
-      0% { text-shadow: 0 0 10px #0ff; }
-      50% { text-shadow: 0 0 25px #0ff; }
-      100% { text-shadow: 0 0 10px #0ff; }
+    .analog{
+      position:fixed;
+      top:15px;right:25px;
+      width:70px;height:70px;
+      border:3px solid rgba(255,255,255,0.8);
+      border-radius:50%;
     }
-    .ongoing, .next {
-      margin-top: 10px;
-      font-size: 1.2rem;
-      text-align: center;
-      color: #0ff;
+    .hand{
+      position:absolute;
+      width:50%;
+      height:2px;
+      background:#fff;
+      top:50%;transform-origin:100%;
+      transition:all 0.05s;
     }
-    .next { font-size: 1rem; color: #55f; }
-    .settings {
-      position: fixed; top: 15px; left: 20px;
-      background: rgba(0,0,0,0.8);
-      border: 1px solid #0ff;
-      border-radius: 10px;
-      padding: 10px;
+    .hand.hour{height:3px;width:35%;}
+    .settings{position:fixed;top:15px;left:25px;}
+    select,button{
+      background:rgba(255,255,255,0.2);
+      color:#fff;
+      border:none;
+      border-radius:8px;
+      padding:5px 10px;
+      backdrop-filter:blur(6px);
     }
-    select, button {
-      background: black; color: #0ff; border: 1px solid #0ff;
-      border-radius: 6px; padding: 5px 10px;
-      font-family: 'Orbitron', monospace;
+    .timer{
+      margin-top:100px;
+      font-size:5rem;
+      font-weight:700;
+      padding:20px 50px;
+      border-radius:25px;
+      background:rgba(255,255,255,0.15);
+      box-shadow:0 0 20px rgba(255,255,255,0.3);
     }
-    .grid {
-      margin-top: 60px;
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-      gap: 10px;
-      width: 95%;
-      max-width: 900px;
+    .ongoing,.next{
+      margin-top:15px;
+      font-size:1.3rem;
+      text-align:center;
+      background:rgba(255,255,255,0.2);
+      padding:10px 25px;
+      border-radius:15px;
+      backdrop-filter:blur(5px);
     }
-    .day-card {
-      background: rgba(0,255,255,0.1);
-      border: 1px solid #0ff;
-      border-radius: 10px;
-      padding: 10px;
+    .grid{
+      margin-top:50px;
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
+      gap:15px;
+      width:95%;
+      max-width:900px;
     }
-    .day-card.highlight { background: rgba(0,255,255,0.25); }
-    .slot { margin: 5px 0; font-size: 0.9rem; }
+    .day-card{
+      background:rgba(255,255,255,0.15);
+      border-radius:15px;
+      padding:12px;
+      backdrop-filter:blur(8px);
+    }
+    .day-card.highlight{
+      box-shadow:0 0 20px rgba(255,255,255,0.6);
+    }
+    .slot{
+      margin-top:8px;
+      background:rgba(255,255,255,0.15);
+      border-radius:10px;
+      padding:8px;
+    }
+    .sub{font-size:1rem;font-weight:700;}
+    .time{font-size:0.85rem;opacity:0.9;}
+    .fac{font-size:0.8rem;opacity:0.7;}
   </style>
 </head>
 <body>
-  <div class="clock" id="clock"></div>
-
+  <div class="analog">
+    <div class="hand hour" id="hour"></div>
+    <div class="hand" id="min"></div>
+    <div class="hand" id="sec"></div>
+  </div>
   <div class="settings">
     Batch:
-    <select id="batch">
-      <option value="D1">D1</option>
-      <option value="D3">D3</option>
-    </select>
+    <select id="batch"><option value="D1">D1</option><option value="D3">D3</option></select>
     <button onclick="saveBatch()">Save</button>
   </div>
 
@@ -89,123 +117,218 @@
   <div class="grid" id="timetable"></div>
 
   <script>
-    const schedule = {
-      D1: {
-        Monday: [
-          ["09:15", "10:05", "PHY (AB)", "A110"],
-          ["10:05", "10:55", "LAUC (SC)", "A213"],
-          ["11:05", "11:55", "BEE (PU)", "A215"],
-          ["11:55", "12:45", "Break", ""],
-          ["12:45", "13:30", "Lunch", ""],
-          ["13:30", "14:20", "BXE (PP)", "A212"],
-          ["14:20", "15:10", "CP (YK)", "A210"],
-          ["15:10", "16:00", "CHEM (MD)", "A111"]
-        ],
-        // add other days...
-      },
-      D3: {
-        Monday: [
-          ["09:15", "10:05", "BXE (PP)", "A212"],
-          ["10:05", "10:55", "PHY (AB)", "A110"],
-          ["11:05", "11:55", "BEE (PU)", "A215"],
-          ["11:55", "12:45", "Break", ""],
-          ["12:45", "13:30", "Lunch", ""],
-          ["13:30", "14:20", "LAUC (SC)", "A213"],
-          ["14:20", "15:10", "CHEM (MD)", "A111"],
-          ["15:10", "16:00", "CP (YK)", "A210"]
-        ],
-        // add other days...
-      }
-    };
-
-    function updateClock() {
-      const now = new Date();
-      const h = String(now.getHours()).padStart(2, "0");
-      const m = String(now.getMinutes()).padStart(2, "0");
-      document.getElementById("clock").textContent = `${h}:${m}`;
+  const schedule={
+    D1:{
+      Monday:[
+        ["09:15","10:05","PHY","AB"],
+        ["10:05","10:55","LAUC","SC"],
+        ["11:05","11:55","BEE","PU"],
+        ["11:55","12:45","Break",""],
+        ["12:45","13:30","Lunch",""],
+        ["13:30","14:20","BXE","PP"],
+        ["14:20","15:10","CP","YK"],
+        ["15:10","16:00","CHEM","MD"]
+      ],
+      Tuesday:[
+        ["09:15","10:05","BXE","PP"],
+        ["10:05","10:55","PHY","AB"],
+        ["11:05","11:55","CP","YK"],
+        ["11:55","12:45","Break",""],
+        ["12:45","13:30","Lunch",""],
+        ["13:30","14:20","BEE","PU"],
+        ["14:20","15:10","LAUC","SC"],
+        ["15:10","16:00","CHEM","MD"]
+      ],
+      Wednesday:[
+        ["09:15","10:05","CP","YK"],
+        ["10:05","10:55","CHEM","MD"],
+        ["11:05","11:55","PHY","AB"],
+        ["11:55","12:45","Break",""],
+        ["12:45","13:30","Lunch",""],
+        ["13:30","14:20","BEE","PU"],
+        ["14:20","15:10","BXE","PP"],
+        ["15:10","16:00","LAUC","SC"]
+      ],
+      Thursday:[
+        ["09:15","10:05","BEE","PU"],
+        ["10:05","10:55","LAUC","SC"],
+        ["11:05","11:55","CHEM","MD"],
+        ["11:55","12:45","Break",""],
+        ["12:45","13:30","Lunch",""],
+        ["13:30","14:20","CP","YK"],
+        ["14:20","15:10","PHY","AB"],
+        ["15:10","16:00","BXE","PP"]
+      ],
+      Friday:[
+        ["09:15","10:05","CHEM","MD"],
+        ["10:05","10:55","PHY","AB"],
+        ["11:05","11:55","BEE","PU"],
+        ["11:55","12:45","Break",""],
+        ["12:45","13:30","Lunch",""],
+        ["13:30","14:20","CP","YK"],
+        ["14:20","15:10","BXE","PP"],
+        ["15:10","16:00","LAUC","SC"]
+      ],
+      Saturday:[
+        ["09:15","10:05","PHY","AB"],
+        ["10:05","10:55","CHEM","MD"],
+        ["11:05","11:55","CP","YK"],
+        ["11:55","12:45","Break",""],
+        ["12:45","13:30","Lunch",""],
+        ["13:30","14:20","BXE","PP"],
+        ["14:20","15:10","BEE","PU"],
+        ["15:10","16:00","LAUC","SC"]
+      ]
+    },
+    D3:{
+      Monday:[
+        ["09:15","10:05","BXE","PP"],
+        ["10:05","10:55","PHY","AB"],
+        ["11:05","11:55","BEE","PU"],
+        ["11:55","12:45","Break",""],
+        ["12:45","13:30","Lunch",""],
+        ["13:30","14:20","LAUC","SC"],
+        ["14:20","15:10","CHEM","MD"],
+        ["15:10","16:00","CP","YK"]
+      ],
+      Tuesday:[
+        ["09:15","10:05","CHEM","MD"],
+        ["10:05","10:55","BXE","PP"],
+        ["11:05","11:55","PHY","AB"],
+        ["11:55","12:45","Break",""],
+        ["12:45","13:30","Lunch",""],
+        ["13:30","14:20","BEE","PU"],
+        ["14:20","15:10","CP","YK"],
+        ["15:10","16:00","LAUC","SC"]
+      ],
+      Wednesday:[
+        ["09:15","10:05","CP","YK"],
+        ["10:05","10:55","BEE","PU"],
+        ["11:05","11:55","LAUC","SC"],
+        ["11:55","12:45","Break",""],
+        ["12:45","13:30","Lunch",""],
+        ["13:30","14:20","CHEM","MD"],
+        ["14:20","15:10","BXE","PP"],
+        ["15:10","16:00","PHY","AB"]
+      ],
+      Thursday:[
+        ["09:15","10:05","PHY","AB"],
+        ["10:05","10:55","CHEM","MD"],
+        ["11:05","11:55","BXE","PP"],
+        ["11:55","12:45","Break",""],
+        ["12:45","13:30","Lunch",""],
+        ["13:30","14:20","LAUC","SC"],
+        ["14:20","15:10","BEE","PU"],
+        ["15:10","16:00","CP","YK"]
+      ],
+      Friday:[
+        ["09:15","10:05","CP","YK"],
+        ["10:05","10:55","BXE","PP"],
+        ["11:05","11:55","PHY","AB"],
+        ["11:55","12:45","Break",""],
+        ["12:45","13:30","Lunch",""],
+        ["13:30","14:20","BEE","PU"],
+        ["14:20","15:10","CHEM","MD"],
+        ["15:10","16:00","LAUC","SC"]
+      ],
+      Saturday:[
+        ["09:15","10:05","BEE","PU"],
+        ["10:05","10:55","CP","YK"],
+        ["11:05","11:55","PHY","AB"],
+        ["11:55","12:45","Break",""],
+        ["12:45","13:30","Lunch",""],
+        ["13:30","14:20","CHEM","MD"],
+        ["14:20","15:10","BXE","PP"],
+        ["15:10","16:00","LAUC","SC"]
+      ]
     }
+  };
 
-    function toMinutes(t) {
-      const [h,m] = t.split(":").map(Number);
-      return h*60 + m;
+  function toMinutes(t){const [h,m]=t.split(":").map(Number);return h*60+m;}
+
+  function findLecture(batch){
+    const dayNames=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+    const today=new Date();const day=dayNames[today.getDay()];
+    const nowM=today.getHours()*60+today.getMinutes();
+    const timetable=schedule[batch][day];
+    if(!timetable)return{ongoing:null,next:null};
+    let ongoing=null,next=null;
+    for(let i=0;i<timetable.length;i++){
+      const [s,e]=timetable[i];
+      const sm=toMinutes(s),em=toMinutes(e);
+      if(nowM>=sm&&nowM<em)ongoing=timetable[i];
+      if(nowM<sm&&!next)next=timetable[i];
     }
+    return{ongoing,next};
+  }
 
-    function findLecture(batch) {
-      const today = new Date();
-      const dayNames = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
-      const day = dayNames[today.getDay()];
-      const timetable = schedule[batch][day];
-      if (!timetable) return {ongoing:null,next:null};
-
-      const nowM = today.getHours()*60 + today.getMinutes();
-      let ongoing = null, next = null;
-      for (let i=0;i<timetable.length;i++){
-        const [s,e] = timetable[i];
-        const sm=toMinutes(s), em=toMinutes(e);
-        if (nowM>=sm && nowM<em) ongoing=timetable[i];
-        if (nowM<sm && !next) next=timetable[i];
-      }
-      return {ongoing,next};
+  function updateLecture(){
+    const batch=localStorage.getItem("batch")||document.getElementById("batch").value;
+    const {ongoing,next}=findLecture(batch);
+    const now=new Date();
+    if(ongoing){
+      document.getElementById("ongoing").textContent=`Ongoing: ${ongoing[2]} (${ongoing[3]})`;
+      const rem=toMinutes(ongoing[1])-(now.getHours()*60+now.getMinutes());
+      const mm=String(rem%60).padStart(2,"0");
+      const hh=String(Math.floor(rem/60)).padStart(2,"0");
+      document.getElementById("timer").textContent=`${hh}:${mm}`;
+    }else{
+      document.getElementById("ongoing").textContent="Finally over 😂";
+      document.getElementById("timer").textContent="--:--";
     }
+    if(next)document.getElementById("next").textContent=`Next: ${next[2]} (${next[3]}) at ${next[0]}`;
+    else document.getElementById("next").textContent="Next: None";
+  }
 
-    function updateLecture(){
-      const batch = localStorage.getItem("batch") || document.getElementById("batch").value;
-      const {ongoing,next} = findLecture(batch);
-      const now = new Date();
-      if (ongoing){
-        document.getElementById("ongoing").textContent = `Ongoing: ${ongoing[2]} - ${ongoing[3]}`;
-        const rem = toMinutes(ongoing[1]) - (now.getHours()*60 + now.getMinutes());
-        const mm = String(Math.floor(rem%60)).padStart(2,"0");
-        const hh = String(Math.floor(rem/60)).padStart(2,"0");
-        document.getElementById("timer").textContent = `${hh}:${mm}`;
-      } else {
-        document.getElementById("ongoing").textContent = "Ongoing: None";
-        document.getElementById("timer").textContent = "--:--";
-      }
-      if (next) document.getElementById("next").textContent = `Next: ${next[2]} - ${next[0]}`;
-      else document.getElementById("next").textContent = "Next: None";
-    }
-
-    function renderTable(batch){
-      const grid = document.getElementById("timetable");
-      grid.innerHTML="";
-      const timetable = schedule[batch];
-      const today = new Date().getDay();
-      const days = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
-      days.forEach((d,i)=>{
-        const card=document.createElement("div");
-        card.className="day-card"+(i+1===today?" highlight":"");
-        const title=document.createElement("div");
-        title.innerHTML=`<b>${d}</b>`;
-        card.appendChild(title);
-        (timetable[d]||[]).forEach(slot=>{
-          const div=document.createElement("div");
-          div.className="slot";
-          div.textContent=`${slot[0]}-${slot[1]}  ${slot[2]}  ${slot[3]}`;
-          card.appendChild(div);
-        });
-        grid.appendChild(card);
+  function renderTable(batch){
+    const grid=document.getElementById("timetable");
+    grid.innerHTML="";
+    const timetable=schedule[batch];
+    const today=new Date().getDay();
+    const days=["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+    days.forEach((d,i)=>{
+      const card=document.createElement("div");
+      card.className="day-card"+(i+1===today?" highlight":"");
+      const title=document.createElement("div");
+      title.innerHTML=`<b>${d}</b>`;
+      card.appendChild(title);
+      (timetable[d]||[]).forEach(slot=>{
+        const div=document.createElement("div");
+        div.className="slot";
+        div.innerHTML=`<div class='sub'>${slot[2]}</div><div class='time'>${slot[0]}-${slot[1]}</div><div class='fac'>${slot[3]}</div>`;
+        card.appendChild(div);
       });
-    }
+      grid.appendChild(card);
+    });
+  }
 
-    function saveBatch(){
-      const b=document.getElementById("batch").value;
-      localStorage.setItem("batch",b);
-      renderTable(b);
-    }
+  function saveBatch(){
+    const b=document.getElementById("batch").value;
+    localStorage.setItem("batch",b);
+    renderTable(b);
+  }
 
-    function init(){
-      const b=localStorage.getItem("batch")||"D1";
-      document.getElementById("batch").value=b;
-      renderTable(b);
-      updateClock();
-      updateLecture();
-      setInterval(updateClock,60000);
-      setInterval(updateLecture,60000);
-    }
+  function analogClock(){
+    const now=new Date();
+    const sec=now.getSeconds(),min=now.getMinutes(),hr=now.getHours()%12;
+    document.getElementById("sec").style.transform=`rotate(${sec*6}deg)`;
+    document.getElementById("min").style.transform=`rotate(${min*6}deg)`;
+    document.getElementById("hour").style.transform=`rotate(${(hr*30)+(min/2)}deg)`;
+  }
 
-    window.onload=init;
+  function init(){
+    const b=localStorage.getItem("batch")||"D1";
+    document.getElementById("batch").value=b;
+    renderTable(b);
+    updateLecture();
+    analogClock();
+    setInterval(updateLecture,60000);
+    setInterval(analogClock,1000);
+  }
+
+  window.onload=init;
   </script>
 </body>
 </html>
+
 
