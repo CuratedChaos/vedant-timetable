@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Vedant's Timetable</title>
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="theme-color" content="#0ea5e9"/>
+  <style>
+    body{font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,'Helvetica Neue',Arial;margin:0;background:#f8fafc;color:#0f172a}
+    header{background:linear-gradient(90deg,#06b6d4,#3b82f6);color:white;padding:18px 20px}
+    .container{max-width:920px;margin:20px auto;padding:16px}
+    .grid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}
+    .day-card{background:#fff;border-radius:10px;padding:10px;box-shadow:0 6px 20px rgba(2,6,23,0.06)}
+    .day-title{font-weight:700;margin-bottom:6px;font-size:14px}
+    .slot{border-radius:8px;padding:8px;margin-bottom:6px;background:#f1f5f9;font-size:13px}
+    .time{font-weight:600;color:#0f172a;font-size:12px}
+    .loc{font-size:11px;color:#475569}
+    footer{text-align:center;color:#475569;margin:20px 0}
+    .top-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    .btn{background:#0ea5e9;color:white;padding:8px 10px;border-radius:8px;border:none;cursor:pointer}
+    .small{font-size:12px;color:#64748b}
+    @media(max-width:800px){
+      .grid{grid-template-columns:repeat(2,1fr)}
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+        <div>
+          <h1 style="margin:0;font-size:20px">Vedant's Timetable</h1>
+          <div class="small">D Division — Sem I (Mon–Sat) • Offline-capable PWA</div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button class="btn" id="installBtn" style="display:none">Install</button>
+          <button class="btn" id="refreshBtn">Refresh</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="top-row" style="margin-bottom:12px">
+      <div class="small">Tap any slot to copy details. Reminders are in-browser only while open.</div>
+    </div>
+
+    <div id="timetable" class="grid"></div>
+
+    <footer>
+      <div class="small">Built for Vedant — Add to Home Screen to use like an app.</div>
+    </footer>
+  </main>
+
+  <script>
+  const data = {"Monday": [{"time": "09:15–10:05", "title": "PHY (AB) - Avinash Bansode", "loc": "A110"}, {"time": "10:05–10:55", "title": "LAUC (SC) - Swapnil Chaudhari", "loc": "A213"}, {"time": "11:05–11:55", "title": "BEE (PU) - Pratima Uploankar", "loc": "A215"}, {"time": "11:55–12:45", "title": "Short Break", "loc": ""}, {"time": "12:45–13:30", "title": "Lunch", "loc": ""}, {"time": "13:30–14:20", "title": "BXE (PP) - Priyanka Patil", "loc": "A212"}, {"time": "14:20–15:10", "title": "CP (YK) - Yadnesh Khotare", "loc": "A210"}, {"time": "15:10–16:00", "title": "CHEM (MD) - Mandakini Dahiwade", "loc": "A111"}], "Tuesday": [{"time": "09:15–10:05", "title": "LAUC (SC) - Swapnil Chaudhari", "loc": "A206"}, {"time": "10:05–10:55", "title": "CP (YK) - Yadnesh Khotare", "loc": "A210"}, {"time": "11:05–11:55", "title": "CHEM (MD) - Mandakini Dahiwade", "loc": "A111"}, {"time": "11:55–12:45", "title": "Short Break", "loc": ""}, {"time": "12:45–13:30", "title": "Lunch", "loc": ""}, {"time": "13:30–14:20", "title": "EG (AD) - Ashwin Dharme", "loc": "A207"}, {"time": "14:20–15:10", "title": "MMF (AD) - Ashwin Dharme", "loc": "WS"}, {"time": "15:10–16:00", "title": "PC (AK) - Ashwini Khurjekar", "loc": "A306"}], "Wednesday": [{"time": "09:15–10:05", "title": "Sports (AG) - Atul Gore", "loc": "Ground"}, {"time": "10:05–10:55", "title": "BEE (PU) - Pratima Uploankar", "loc": "A215"}, {"time": "11:05–11:55", "title": "LAUC (SC) - Swapnil Chaudhari", "loc": "A213"}, {"time": "11:55–12:45", "title": "Short Break", "loc": ""}, {"time": "12:45–13:30", "title": "Lunch", "loc": ""}, {"time": "13:30–14:20", "title": "PHY (AB) - Avinash Bansode", "loc": "A110"}, {"time": "14:20–15:10", "title": "BEE (PM) - Priyanka Mahajan", "loc": "A215"}, {"time": "15:10–16:00", "title": "BXE (PP) - Priyanka Patil", "loc": "A212"}], "Thursday": [{"time": "09:15–10:05", "title": "LAUC (SC) - Swapnil Chaudhari", "loc": "A206"}, {"time": "10:05–10:55", "title": "CP (YK) - Yadnesh Khotare", "loc": "A210"}, {"time": "11:05–11:55", "title": "BXE (PP) - Priyanka Patil", "loc": "A212"}, {"time": "11:55–12:45", "title": "Short Break", "loc": ""}, {"time": "12:45–13:30", "title": "Lunch", "loc": ""}, {"time": "13:30–14:20", "title": "CHEM (MD) - Mandakini Dahiwade", "loc": "A111"}, {"time": "14:20–15:10", "title": "EG (AD) - Ashwin Dharme", "loc": "A206"}, {"time": "15:10–16:00", "title": "CP (YK) - Yadnesh Khotare (Lab)", "loc": "A210"}], "Friday": [{"time": "09:15–10:05", "title": "PC (AK) - Ashwini Khurjekar", "loc": "A204"}, {"time": "10:05–10:55", "title": "LAUC (SC) - Swapnil Chaudhari", "loc": "A205"}, {"time": "11:05–11:55", "title": "EG (AD) - Ashwin Dharme", "loc": "A207"}, {"time": "11:55–12:45", "title": "Short Break", "loc": ""}, {"time": "12:45–13:30", "title": "Lunch / Mentoring", "loc": ""}, {"time": "13:30–14:20", "title": "Japanese (RS) - Rishi Sonawane", "loc": "A306"}, {"time": "14:20–15:10", "title": "MMF (AD) - Ashwin Dharme", "loc": "WS"}, {"time": "15:10–16:00", "title": "CP (SM) - Sanjay Mathapati", "loc": "A210"}], "Saturday": [{"time": "09:15–10:05", "title": "VAP/Club Activity", "loc": ""}, {"time": "10:05–10:55", "title": "VAP/Club Activity", "loc": ""}, {"time": "11:05–11:55", "title": "VAP/Club Activity", "loc": ""}, {"time": "11:55–12:45", "title": "Short Break", "loc": ""}, {"time": "12:45–13:30", "title": "Lunch", "loc": ""}, {"time": "13:30–14:20", "title": "Club Activity", "loc": ""}, {"time": "14:20–15:10", "title": "Club Activity", "loc": ""}, {"time": "15:10–16:00", "title": "Club Activity", "loc": ""}]};
+
+  function build(){
+    const container = document.getElementById('timetable');
+    container.innerHTML = '';
+    Object.keys(data).forEach(day=>{
+      const card = document.createElement('div'); card.className='day-card';
+      const title = document.createElement('div'); title.className='day-title'; title.textContent = day;
+      card.appendChild(title);
+      data[day].forEach(slot=>{
+        const s = document.createElement('div'); s.className='slot';
+        s.innerHTML = '<div class="time">'+slot.time+'</div><div style="font-weight:600">'+slot.title+'</div><div class="loc">'+(slot.loc||'')+'</div>';
+        s.addEventListener('click', ()=>{ 
+          const text = day + ' | ' + slot.time + ' | ' + slot.title + ' | ' + (slot.loc||'');
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).then(()=>alert('Copied to clipboard'));
+          } else { alert(text); }
+        });
+        card.appendChild(s);
+      });
+      container.appendChild(card);
+    });
+  }
+
+  document.getElementById('refreshBtn').addEventListener('click', ()=>location.reload());
+  window.addEventListener('load', ()=>build());
+
+  // PWA install prompt handling
+  let deferredPrompt;
+  const installBtn = document.getElementById('installBtn');
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    installBtn.style.display = 'inline-block';
+  });
+  installBtn.addEventListener('click', async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const choice = await deferredPrompt.userChoice;
+    deferredPrompt = null;
+    installBtn.style.display = 'none';
+  });
+
+  // register service worker
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/service-worker.js').catch(()=>{});
+  }
+  </script>
+</body>
+</html>
