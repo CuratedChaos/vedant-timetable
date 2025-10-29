@@ -27,33 +27,36 @@
       50%{background-position:100% 50%}
       100%{background-position:0% 50%}
     }
+
     .analog{
       position:fixed;
       top:15px;right:25px;
-      width:70px;height:70px;
+      width:90px;height:90px;
       border:3px solid rgba(255,255,255,0.8);
       border-radius:50%;
     }
     .hand{
       position:absolute;
-      width:50%;
-      height:2px;
+      top:50%;left:50%;
+      transform-origin:bottom center;
+      transform:translate(-50%,-100%) rotate(0deg);
       background:#fff;
-      top:50%;transform-origin:100%;
-      transition:all 0.05s;
+      border-radius:2px;
     }
-    .hand.hour{height:3px;width:35%;}
+    .hand.hour{width:4px;height:25px;background:#fff;}
+    .hand.min{width:3px;height:35px;background:#e0e0e0;}
+    .hand.sec{width:2px;height:40px;background:#f8d210;}
+
     .settings{position:fixed;top:15px;left:25px;}
     select,button{
       background:rgba(255,255,255,0.2);
-      color:#fff;
-      border:none;
-      border-radius:8px;
-      padding:5px 10px;
+      color:#fff;border:none;
+      border-radius:8px;padding:5px 10px;
       backdrop-filter:blur(6px);
     }
+
     .timer{
-      margin-top:100px;
+      margin-top:110px;
       font-size:5rem;
       font-weight:700;
       padding:20px 50px;
@@ -73,10 +76,10 @@
     .grid{
       margin-top:50px;
       display:grid;
-      grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
+      grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
       gap:15px;
       width:95%;
-      max-width:900px;
+      max-width:1000px;
     }
     .day-card{
       background:rgba(255,255,255,0.15);
@@ -101,9 +104,10 @@
 <body>
   <div class="analog">
     <div class="hand hour" id="hour"></div>
-    <div class="hand" id="min"></div>
-    <div class="hand" id="sec"></div>
+    <div class="hand min" id="min"></div>
+    <div class="hand sec" id="sec"></div>
   </div>
+
   <div class="settings">
     Batch:
     <select id="batch"><option value="D1">D1</option><option value="D3">D3</option></select>
@@ -117,218 +121,214 @@
   <div class="grid" id="timetable"></div>
 
   <script>
-  const schedule={
-    D1:{
-      Monday:[
-        ["09:15","10:05","PHY","AB"],
-        ["10:05","10:55","LAUC","SC"],
-        ["11:05","11:55","BEE","PU"],
-        ["11:55","12:45","Break",""],
-        ["12:45","13:30","Lunch",""],
-        ["13:30","14:20","BXE","PP"],
-        ["14:20","15:10","CP","YK"],
-        ["15:10","16:00","CHEM","MD"]
-      ],
-      Tuesday:[
-        ["09:15","10:05","BXE","PP"],
-        ["10:05","10:55","PHY","AB"],
-        ["11:05","11:55","CP","YK"],
-        ["11:55","12:45","Break",""],
-        ["12:45","13:30","Lunch",""],
-        ["13:30","14:20","BEE","PU"],
-        ["14:20","15:10","LAUC","SC"],
-        ["15:10","16:00","CHEM","MD"]
-      ],
-      Wednesday:[
-        ["09:15","10:05","CP","YK"],
-        ["10:05","10:55","CHEM","MD"],
-        ["11:05","11:55","PHY","AB"],
-        ["11:55","12:45","Break",""],
-        ["12:45","13:30","Lunch",""],
-        ["13:30","14:20","BEE","PU"],
-        ["14:20","15:10","BXE","PP"],
-        ["15:10","16:00","LAUC","SC"]
-      ],
-      Thursday:[
-        ["09:15","10:05","BEE","PU"],
-        ["10:05","10:55","LAUC","SC"],
-        ["11:05","11:55","CHEM","MD"],
-        ["11:55","12:45","Break",""],
-        ["12:45","13:30","Lunch",""],
-        ["13:30","14:20","CP","YK"],
-        ["14:20","15:10","PHY","AB"],
-        ["15:10","16:00","BXE","PP"]
-      ],
-      Friday:[
-        ["09:15","10:05","CHEM","MD"],
-        ["10:05","10:55","PHY","AB"],
-        ["11:05","11:55","BEE","PU"],
-        ["11:55","12:45","Break",""],
-        ["12:45","13:30","Lunch",""],
-        ["13:30","14:20","CP","YK"],
-        ["14:20","15:10","BXE","PP"],
-        ["15:10","16:00","LAUC","SC"]
-      ],
-      Saturday:[
-        ["09:15","10:05","PHY","AB"],
-        ["10:05","10:55","CHEM","MD"],
-        ["11:05","11:55","CP","YK"],
-        ["11:55","12:45","Break",""],
-        ["12:45","13:30","Lunch",""],
-        ["13:30","14:20","BXE","PP"],
-        ["14:20","15:10","BEE","PU"],
-        ["15:10","16:00","LAUC","SC"]
-      ]
-    },
-    D3:{
-      Monday:[
-        ["09:15","10:05","BXE","PP"],
-        ["10:05","10:55","PHY","AB"],
-        ["11:05","11:55","BEE","PU"],
-        ["11:55","12:45","Break",""],
-        ["12:45","13:30","Lunch",""],
-        ["13:30","14:20","LAUC","SC"],
-        ["14:20","15:10","CHEM","MD"],
-        ["15:10","16:00","CP","YK"]
-      ],
-      Tuesday:[
-        ["09:15","10:05","CHEM","MD"],
-        ["10:05","10:55","BXE","PP"],
-        ["11:05","11:55","PHY","AB"],
-        ["11:55","12:45","Break",""],
-        ["12:45","13:30","Lunch",""],
-        ["13:30","14:20","BEE","PU"],
-        ["14:20","15:10","CP","YK"],
-        ["15:10","16:00","LAUC","SC"]
-      ],
-      Wednesday:[
-        ["09:15","10:05","CP","YK"],
-        ["10:05","10:55","BEE","PU"],
-        ["11:05","11:55","LAUC","SC"],
-        ["11:55","12:45","Break",""],
-        ["12:45","13:30","Lunch",""],
-        ["13:30","14:20","CHEM","MD"],
-        ["14:20","15:10","BXE","PP"],
-        ["15:10","16:00","PHY","AB"]
-      ],
-      Thursday:[
-        ["09:15","10:05","PHY","AB"],
-        ["10:05","10:55","CHEM","MD"],
-        ["11:05","11:55","BXE","PP"],
-        ["11:55","12:45","Break",""],
-        ["12:45","13:30","Lunch",""],
-        ["13:30","14:20","LAUC","SC"],
-        ["14:20","15:10","BEE","PU"],
-        ["15:10","16:00","CP","YK"]
-      ],
-      Friday:[
-        ["09:15","10:05","CP","YK"],
-        ["10:05","10:55","BXE","PP"],
-        ["11:05","11:55","PHY","AB"],
-        ["11:55","12:45","Break",""],
-        ["12:45","13:30","Lunch",""],
-        ["13:30","14:20","BEE","PU"],
-        ["14:20","15:10","CHEM","MD"],
-        ["15:10","16:00","LAUC","SC"]
-      ],
-      Saturday:[
-        ["09:15","10:05","BEE","PU"],
-        ["10:05","10:55","CP","YK"],
-        ["11:05","11:55","PHY","AB"],
-        ["11:55","12:45","Break",""],
-        ["12:45","13:30","Lunch",""],
-        ["13:30","14:20","CHEM","MD"],
-        ["14:20","15:10","BXE","PP"],
-        ["15:10","16:00","LAUC","SC"]
-      ]
+    const schedule={
+      D1:{
+        Monday:[
+          ["09:15","10:05","LAUC(SC)","A207"],
+          ["10:05","10:55","BXE(PP)","A207"],
+          ["10:55","11:05","Short Break",""],
+          ["11:05","11:55","EG(AD)","A207"],
+          ["11:55","12:45","CHEM(MD)","A207"],
+          ["12:45","13:30","Lunch Break",""],
+          ["13:30","15:10","Yoga(SP)","MPH"],
+          ["15:10","16:00","CHEM(MD)","A207"]
+        ],
+        Tuesday:[
+          ["09:15","10:05","LAUC(SC)","A207"],
+          ["10:05","10:55","CP(YK)","A207"],
+          ["10:55","11:05","Short Break",""],
+          ["11:05","12:45","CHEM(MD)","A111"],
+          ["12:45","13:30","Lunch Break",""],
+          ["13:30","15:10","CP(YK)","A210"],
+          ["15:10","16:00","CHEM(MD)","A207"]
+        ],
+        Wednesday:[
+          ["09:15","10:55","LAUC(MT)","A206"],
+          ["10:55","11:05","Short Break",""],
+          ["11:05","11:55","PC(AK)","A206"],
+          ["11:55","12:45","LAUC(SC)","A206"],
+          ["12:45","13:30","Lunch Break",""],
+          ["13:30","14:20","BXE(PP)","A206"],
+          ["14:20","15:10","Japanese Language","A206"],
+          ["15:10","16:00","EG(AD)","A206"]
+        ],
+        Thursday:[
+          ["09:15","10:05","LAUC(SC)","A207"],
+          ["10:05","10:55","CP(YK)","A207"],
+          ["10:55","11:05","Short Break",""],
+          ["11:05","12:45","MMF(AD)","WS"],
+          ["12:45","13:30","Lunch Break",""],
+          ["13:30","15:10","BXE(PP)","A212"],
+          ["15:10","16:00","Japanese Language","A204"]
+        ],
+        Friday:[
+          ["09:15","10:05","EG(AD)","A207"],
+          ["10:05","10:55","BXE(PP)","A207"],
+          ["10:55","11:05","Short Break",""],
+          ["11:05","11:55","CHEM(MD)","A207"],
+          ["11:55","12:45","CP(YK)","A207"],
+          ["12:45","13:30","Lunch Break",""],
+          ["13:30","15:10","Mentoring/Dept Meeting",""],
+          ["15:10","16:00","TED Talk",""]
+        ],
+        Saturday:[
+          ["09:15","10:05","VAP",""],
+          ["10:05","10:55","VAP",""],
+          ["10:55","11:05","Short Break",""],
+          ["11:05","11:55","VAP",""],
+          ["11:55","12:45","VAP",""],
+          ["12:45","13:30","Lunch Break",""],
+          ["13:30","14:20","Club Activity",""],
+          ["14:20","15:10","Club Activity",""],
+          ["15:10","16:00","Club Activity",""]
+        ]
+      },
+      D3:{
+        Monday:[
+          ["09:15","10:05","LAUC(SC)","A207"],
+          ["10:05","10:55","BXE(PP)","A207"],
+          ["10:55","11:05","Short Break",""],
+          ["11:05","11:55","EG(AD)","A207"],
+          ["11:55","12:45","CHEM(MD)","A207"],
+          ["12:45","13:30","Lunch Break",""],
+          ["13:30","15:10","CP(YK)","A414"],
+          ["15:10","16:00","CHEM(MD)","A207"]
+        ],
+        Tuesday:[
+          ["09:15","10:05","LAUC(SC)","A207"],
+          ["10:05","10:55","CP(YK)","A207"],
+          ["10:55","11:05","Short Break",""],
+          ["11:05","12:45","LAUC(MT)","A213"],
+          ["12:45","13:30","Lunch Break",""],
+          ["13:30","15:10","MMF(AD)","WS"],
+          ["15:10","16:00","CHEM(MD)","A207"]
+        ],
+        Wednesday:[
+          ["09:15","10:55","BXE(PP)","A212"],
+          ["10:55","11:05","Short Break",""],
+          ["11:05","11:55","PC(AK)","A206"],
+          ["11:55","12:45","LAUC(SC)","A206"],
+          ["12:45","13:30","Lunch Break",""],
+          ["13:30","14:20","BXE(PP)","A206"],
+          ["14:20","15:10","Japanese Language","A206"],
+          ["15:10","16:00","EG(AD)","A206"]
+        ],
+        Thursday:[
+          ["09:15","10:05","LAUC(SC)","A207"],
+          ["10:05","10:55","CP(YK)","A207"],
+          ["10:55","11:05","Short Break",""],
+          ["11:05","12:45","Yoga(SP)","MPH"],
+          ["12:45","13:30","Lunch Break",""],
+          ["13:30","15:10","CHEM(MD)","A111"],
+          ["15:10","16:00","Japanese Language","A204"]
+        ],
+        Friday:[
+          ["09:15","10:05","EG(AD)","A207"],
+          ["10:05","10:55","BXE(PP)","A207"],
+          ["10:55","11:05","Short Break",""],
+          ["11:05","11:55","CHEM(MD)","A207"],
+          ["11:55","12:45","CP(YK)","A207"],
+          ["12:45","13:30","Lunch Break",""],
+          ["13:30","15:10","Mentoring/Dept Meeting",""],
+          ["15:10","16:00","TED Talk",""]
+        ],
+        Saturday:[
+          ["09:15","10:05","VAP",""],
+          ["10:05","10:55","VAP",""],
+          ["10:55","11:05","Short Break",""],
+          ["11:05","11:55","VAP",""],
+          ["11:55","12:45","VAP",""],
+          ["12:45","13:30","Lunch Break",""],
+          ["13:30","14:20","Club Activity",""],
+          ["14:20","15:10","Club Activity",""],
+          ["15:10","16:00","Club Activity",""]
+        ]
+      }
+    };
+
+    function toMinutes(t){const [h,m]=t.split(":").map(Number);return h*60+m;}
+
+    function findLecture(batch){
+      const dayNames=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+      const today=new Date();const day=dayNames[today.getDay()];
+      const nowM=today.getHours()*60+today.getMinutes();
+      const timetable=schedule[batch][day];
+      if(!timetable)return{ongoing:null,next:null};
+      let ongoing=null,next=null;
+      for(let i=0;i<timetable.length;i++){
+        const [s,e]=timetable[i];
+        const sm=toMinutes(s),em=toMinutes(e);
+        if(nowM>=sm&&nowM<em)ongoing=timetable[i];
+        if(nowM<sm&&!next)next=timetable[i];
+      }
+      return{ongoing,next};
     }
-  };
 
-  function toMinutes(t){const [h,m]=t.split(":").map(Number);return h*60+m;}
-
-  function findLecture(batch){
-    const dayNames=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
-    const today=new Date();const day=dayNames[today.getDay()];
-    const nowM=today.getHours()*60+today.getMinutes();
-    const timetable=schedule[batch][day];
-    if(!timetable)return{ongoing:null,next:null};
-    let ongoing=null,next=null;
-    for(let i=0;i<timetable.length;i++){
-      const [s,e]=timetable[i];
-      const sm=toMinutes(s),em=toMinutes(e);
-      if(nowM>=sm&&nowM<em)ongoing=timetable[i];
-      if(nowM<sm&&!next)next=timetable[i];
+    function updateLecture(){
+      const batch=localStorage.getItem("batch")||document.getElementById("batch").value;
+      const {ongoing,next}=findLecture(batch);
+      const now=new Date();
+      if(ongoing){
+        document.getElementById("ongoing").textContent=`Ongoing: ${ongoing[2]} (${ongoing[3]||""})`;
+        const rem=toMinutes(ongoing[1])-(now.getHours()*60+now.getMinutes());
+        const mm=String(rem%60).padStart(2,"0");
+        const hh=String(Math.floor(rem/60)).padStart(2,"0");
+        document.getElementById("timer").textContent=`${hh}:${mm}`;
+      }else{
+        document.getElementById("ongoing").textContent="Finally over 😂";
+        document.getElementById("timer").textContent="--:--";
+      }
+      if(next)document.getElementById("next").textContent=`Next: ${next[2]} (${next[3]||""}) at ${next[0]}`;
+      else document.getElementById("next").textContent="Next: None";
     }
-    return{ongoing,next};
-  }
 
-  function updateLecture(){
-    const batch=localStorage.getItem("batch")||document.getElementById("batch").value;
-    const {ongoing,next}=findLecture(batch);
-    const now=new Date();
-    if(ongoing){
-      document.getElementById("ongoing").textContent=`Ongoing: ${ongoing[2]} (${ongoing[3]})`;
-      const rem=toMinutes(ongoing[1])-(now.getHours()*60+now.getMinutes());
-      const mm=String(rem%60).padStart(2,"0");
-      const hh=String(Math.floor(rem/60)).padStart(2,"0");
-      document.getElementById("timer").textContent=`${hh}:${mm}`;
-    }else{
-      document.getElementById("ongoing").textContent="Finally over 😂";
-      document.getElementById("timer").textContent="--:--";
-    }
-    if(next)document.getElementById("next").textContent=`Next: ${next[2]} (${next[3]}) at ${next[0]}`;
-    else document.getElementById("next").textContent="Next: None";
-  }
-
-  function renderTable(batch){
-    const grid=document.getElementById("timetable");
-    grid.innerHTML="";
-    const timetable=schedule[batch];
-    const today=new Date().getDay();
-    const days=["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
-    days.forEach((d,i)=>{
-      const card=document.createElement("div");
-      card.className="day-card"+(i+1===today?" highlight":"");
-      const title=document.createElement("div");
-      title.innerHTML=`<b>${d}</b>`;
-      card.appendChild(title);
-      (timetable[d]||[]).forEach(slot=>{
-        const div=document.createElement("div");
-        div.className="slot";
-        div.innerHTML=`<div class='sub'>${slot[2]}</div><div class='time'>${slot[0]}-${slot[1]}</div><div class='fac'>${slot[3]}</div>`;
-        card.appendChild(div);
+    function renderTable(batch){
+      const grid=document.getElementById("timetable");
+      grid.innerHTML="";
+      const timetable=schedule[batch];
+      const today=new Date().getDay();
+      const days=["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+      days.forEach((d,i)=>{
+        const card=document.createElement("div");
+        card.className="day-card"+(i+1===today?" highlight":"");
+        const title=document.createElement("div");
+        title.innerHTML=`<b>${d}</b>`;
+        card.appendChild(title);
+        (timetable[d]||[]).forEach(slot=>{
+          const div=document.createElement("div");
+          div.className="slot";
+          div.innerHTML=`<div class='sub'>${slot[2]}</div><div class='time'>${slot[0]}-${slot[1]}</div><div class='fac'>${slot[3]}</div>`;
+          card.appendChild(div);
+        });
+        grid.appendChild(card);
       });
-      grid.appendChild(card);
-    });
-  }
+    }
 
-  function saveBatch(){
-    const b=document.getElementById("batch").value;
-    localStorage.setItem("batch",b);
-    renderTable(b);
-  }
+    function saveBatch(){
+      const b=document.getElementById("batch").value;
+      localStorage.setItem("batch",b);
+      renderTable(b);
+    }
 
-  function analogClock(){
-    const now=new Date();
-    const sec=now.getSeconds(),min=now.getMinutes(),hr=now.getHours()%12;
-    document.getElementById("sec").style.transform=`rotate(${sec*6}deg)`;
-    document.getElementById("min").style.transform=`rotate(${min*6}deg)`;
-    document.getElementById("hour").style.transform=`rotate(${(hr*30)+(min/2)}deg)`;
-  }
+    function analogClock(){
+      const now=new Date();
+      const sec=now.getSeconds(),min=now.getMinutes(),hr=now.getHours()%12;
+      document.getElementById("sec").style.transform=`translate(-50%,-100%) rotate(${sec*6}deg)`;
+      document.getElementById("min").style.transform=`translate(-50%,-100%) rotate(${min*6}deg)`;
+      document.getElementById("hour").style.transform=`translate(-50%,-100%) rotate(${(hr*30)+(min/2)}deg)`;
+    }
 
-  function init(){
-    const b=localStorage.getItem("batch")||"D1";
-    document.getElementById("batch").value=b;
-    renderTable(b);
-    updateLecture();
-    analogClock();
-    setInterval(updateLecture,60000);
-    setInterval(analogClock,1000);
-  }
+    function init(){
+      const b=localStorage.getItem("batch")||"D1";
+      document.getElementById("batch").value=b;
+      renderTable(b);
+      updateLecture();
+      analogClock();
+      setInterval(updateLecture,60000);
+      setInterval(analogClock,1000);
+    }
 
-  window.onload=init;
+    window.onload=init;
   </script>
 </body>
 </html>
-
-
