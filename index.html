@@ -3,104 +3,209 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Vedant's Timetable</title>
+  <title>Smart Timetable</title>
   <link rel="manifest" href="/manifest.json" />
-  <meta name="theme-color" content="#0ea5e9"/>
+  <meta name="theme-color" content="#0ff" />
   <style>
-    body{font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,'Helvetica Neue',Arial;margin:0;background:#f8fafc;color:#0f172a}
-    header{background:linear-gradient(90deg,#06b6d4,#3b82f6);color:white;padding:18px 20px}
-    .container{max-width:920px;margin:20px auto;padding:16px}
-    .grid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}
-    .day-card{background:#fff;border-radius:10px;padding:10px;box-shadow:0 6px 20px rgba(2,6,23,0.06)}
-    .day-title{font-weight:700;margin-bottom:6px;font-size:14px}
-    .slot{border-radius:8px;padding:8px;margin-bottom:6px;background:#f1f5f9;font-size:13px}
-    .time{font-weight:600;color:#0f172a;font-size:12px}
-    .loc{font-size:11px;color:#475569}
-    footer{text-align:center;color:#475569;margin:20px 0}
-    .top-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-    .btn{background:#0ea5e9;color:white;padding:8px 10px;border-radius:8px;border:none;cursor:pointer}
-    .small{font-size:12px;color:#64748b}
-    @media(max-width:800px){
-      .grid{grid-template-columns:repeat(2,1fr)}
+    body {
+      margin: 0;
+      font-family: 'Orbitron', monospace;
+      background-color: #000;
+      color: #0ff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      overflow-x: hidden;
     }
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&display=swap');
+    h1, h2, h3, h4, h5, h6 { font-family: 'Orbitron', monospace; }
+    .clock { position: absolute; top: 15px; right: 20px; font-size: 1.2rem; color: #0ff; }
+    .timer {
+      margin-top: 70px;
+      font-size: 5rem;
+      font-weight: bold;
+      text-shadow: 0 0 20px #0ff, 0 0 40px #0ff;
+      animation: pulse 1.5s infinite;
+    }
+    @keyframes pulse {
+      0% { text-shadow: 0 0 10px #0ff; }
+      50% { text-shadow: 0 0 25px #0ff; }
+      100% { text-shadow: 0 0 10px #0ff; }
+    }
+    .ongoing, .next {
+      margin-top: 10px;
+      font-size: 1.2rem;
+      text-align: center;
+      color: #0ff;
+    }
+    .next { font-size: 1rem; color: #55f; }
+    .settings {
+      position: fixed; top: 15px; left: 20px;
+      background: rgba(0,0,0,0.8);
+      border: 1px solid #0ff;
+      border-radius: 10px;
+      padding: 10px;
+    }
+    select, button {
+      background: black; color: #0ff; border: 1px solid #0ff;
+      border-radius: 6px; padding: 5px 10px;
+      font-family: 'Orbitron', monospace;
+    }
+    .grid {
+      margin-top: 60px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 10px;
+      width: 95%;
+      max-width: 900px;
+    }
+    .day-card {
+      background: rgba(0,255,255,0.1);
+      border: 1px solid #0ff;
+      border-radius: 10px;
+      padding: 10px;
+    }
+    .day-card.highlight { background: rgba(0,255,255,0.25); }
+    .slot { margin: 5px 0; font-size: 0.9rem; }
   </style>
 </head>
 <body>
-  <header>
-    <div class="container">
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
-        <div>
-          <h1 style="margin:0;font-size:20px">Vedant's Timetable</h1>
-          <div class="small">D Division — Sem I (Mon–Sat) • Offline-capable PWA</div>
-        </div>
-        <div style="display:flex;gap:8px;align-items:center">
-          <button class="btn" id="installBtn" style="display:none">Install</button>
-          <button class="btn" id="refreshBtn">Refresh</button>
-        </div>
-      </div>
-    </div>
-  </header>
+  <div class="clock" id="clock"></div>
 
-  <main class="container">
-    <div class="top-row" style="margin-bottom:12px">
-      <div class="small">Tap any slot to copy details. Reminders are in-browser only while open.</div>
-    </div>
+  <div class="settings">
+    Batch:
+    <select id="batch">
+      <option value="D1">D1</option>
+      <option value="D3">D3</option>
+    </select>
+    <button onclick="saveBatch()">Save</button>
+  </div>
 
-    <div id="timetable" class="grid"></div>
+  <div class="timer" id="timer">--:--</div>
+  <div class="ongoing" id="ongoing">Ongoing: None</div>
+  <div class="next" id="next">Next: --</div>
 
-    <footer>
-      <div class="small">Built for Vedant — Add to Home Screen to use like an app.</div>
-    </footer>
-  </main>
+  <div class="grid" id="timetable"></div>
 
   <script>
-  const data = {"Monday": [{"time": "09:15–10:05", "title": "PHY (AB) - Avinash Bansode", "loc": "A110"}, {"time": "10:05–10:55", "title": "LAUC (SC) - Swapnil Chaudhari", "loc": "A213"}, {"time": "11:05–11:55", "title": "BEE (PU) - Pratima Uploankar", "loc": "A215"}, {"time": "11:55–12:45", "title": "Short Break", "loc": ""}, {"time": "12:45–13:30", "title": "Lunch", "loc": ""}, {"time": "13:30–14:20", "title": "BXE (PP) - Priyanka Patil", "loc": "A212"}, {"time": "14:20–15:10", "title": "CP (YK) - Yadnesh Khotare", "loc": "A210"}, {"time": "15:10–16:00", "title": "CHEM (MD) - Mandakini Dahiwade", "loc": "A111"}], "Tuesday": [{"time": "09:15–10:05", "title": "LAUC (SC) - Swapnil Chaudhari", "loc": "A206"}, {"time": "10:05–10:55", "title": "CP (YK) - Yadnesh Khotare", "loc": "A210"}, {"time": "11:05–11:55", "title": "CHEM (MD) - Mandakini Dahiwade", "loc": "A111"}, {"time": "11:55–12:45", "title": "Short Break", "loc": ""}, {"time": "12:45–13:30", "title": "Lunch", "loc": ""}, {"time": "13:30–14:20", "title": "EG (AD) - Ashwin Dharme", "loc": "A207"}, {"time": "14:20–15:10", "title": "MMF (AD) - Ashwin Dharme", "loc": "WS"}, {"time": "15:10–16:00", "title": "PC (AK) - Ashwini Khurjekar", "loc": "A306"}], "Wednesday": [{"time": "09:15–10:05", "title": "Sports (AG) - Atul Gore", "loc": "Ground"}, {"time": "10:05–10:55", "title": "BEE (PU) - Pratima Uploankar", "loc": "A215"}, {"time": "11:05–11:55", "title": "LAUC (SC) - Swapnil Chaudhari", "loc": "A213"}, {"time": "11:55–12:45", "title": "Short Break", "loc": ""}, {"time": "12:45–13:30", "title": "Lunch", "loc": ""}, {"time": "13:30–14:20", "title": "PHY (AB) - Avinash Bansode", "loc": "A110"}, {"time": "14:20–15:10", "title": "BEE (PM) - Priyanka Mahajan", "loc": "A215"}, {"time": "15:10–16:00", "title": "BXE (PP) - Priyanka Patil", "loc": "A212"}], "Thursday": [{"time": "09:15–10:05", "title": "LAUC (SC) - Swapnil Chaudhari", "loc": "A206"}, {"time": "10:05–10:55", "title": "CP (YK) - Yadnesh Khotare", "loc": "A210"}, {"time": "11:05–11:55", "title": "BXE (PP) - Priyanka Patil", "loc": "A212"}, {"time": "11:55–12:45", "title": "Short Break", "loc": ""}, {"time": "12:45–13:30", "title": "Lunch", "loc": ""}, {"time": "13:30–14:20", "title": "CHEM (MD) - Mandakini Dahiwade", "loc": "A111"}, {"time": "14:20–15:10", "title": "EG (AD) - Ashwin Dharme", "loc": "A206"}, {"time": "15:10–16:00", "title": "CP (YK) - Yadnesh Khotare (Lab)", "loc": "A210"}], "Friday": [{"time": "09:15–10:05", "title": "PC (AK) - Ashwini Khurjekar", "loc": "A204"}, {"time": "10:05–10:55", "title": "LAUC (SC) - Swapnil Chaudhari", "loc": "A205"}, {"time": "11:05–11:55", "title": "EG (AD) - Ashwin Dharme", "loc": "A207"}, {"time": "11:55–12:45", "title": "Short Break", "loc": ""}, {"time": "12:45–13:30", "title": "Lunch / Mentoring", "loc": ""}, {"time": "13:30–14:20", "title": "Japanese (RS) - Rishi Sonawane", "loc": "A306"}, {"time": "14:20–15:10", "title": "MMF (AD) - Ashwin Dharme", "loc": "WS"}, {"time": "15:10–16:00", "title": "CP (SM) - Sanjay Mathapati", "loc": "A210"}], "Saturday": [{"time": "09:15–10:05", "title": "VAP/Club Activity", "loc": ""}, {"time": "10:05–10:55", "title": "VAP/Club Activity", "loc": ""}, {"time": "11:05–11:55", "title": "VAP/Club Activity", "loc": ""}, {"time": "11:55–12:45", "title": "Short Break", "loc": ""}, {"time": "12:45–13:30", "title": "Lunch", "loc": ""}, {"time": "13:30–14:20", "title": "Club Activity", "loc": ""}, {"time": "14:20–15:10", "title": "Club Activity", "loc": ""}, {"time": "15:10–16:00", "title": "Club Activity", "loc": ""}]};
+    const schedule = {
+      D1: {
+        Monday: [
+          ["09:15", "10:05", "PHY (AB)", "A110"],
+          ["10:05", "10:55", "LAUC (SC)", "A213"],
+          ["11:05", "11:55", "BEE (PU)", "A215"],
+          ["11:55", "12:45", "Break", ""],
+          ["12:45", "13:30", "Lunch", ""],
+          ["13:30", "14:20", "BXE (PP)", "A212"],
+          ["14:20", "15:10", "CP (YK)", "A210"],
+          ["15:10", "16:00", "CHEM (MD)", "A111"]
+        ],
+        // add other days...
+      },
+      D3: {
+        Monday: [
+          ["09:15", "10:05", "BXE (PP)", "A212"],
+          ["10:05", "10:55", "PHY (AB)", "A110"],
+          ["11:05", "11:55", "BEE (PU)", "A215"],
+          ["11:55", "12:45", "Break", ""],
+          ["12:45", "13:30", "Lunch", ""],
+          ["13:30", "14:20", "LAUC (SC)", "A213"],
+          ["14:20", "15:10", "CHEM (MD)", "A111"],
+          ["15:10", "16:00", "CP (YK)", "A210"]
+        ],
+        // add other days...
+      }
+    };
 
-  function build(){
-    const container = document.getElementById('timetable');
-    container.innerHTML = '';
-    Object.keys(data).forEach(day=>{
-      const card = document.createElement('div'); card.className='day-card';
-      const title = document.createElement('div'); title.className='day-title'; title.textContent = day;
-      card.appendChild(title);
-      data[day].forEach(slot=>{
-        const s = document.createElement('div'); s.className='slot';
-        s.innerHTML = '<div class="time">'+slot.time+'</div><div style="font-weight:600">'+slot.title+'</div><div class="loc">'+(slot.loc||'')+'</div>';
-        s.addEventListener('click', ()=>{ 
-          const text = day + ' | ' + slot.time + ' | ' + slot.title + ' | ' + (slot.loc||'');
-          if (navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard.writeText(text).then(()=>alert('Copied to clipboard'));
-          } else { alert(text); }
+    function updateClock() {
+      const now = new Date();
+      const h = String(now.getHours()).padStart(2, "0");
+      const m = String(now.getMinutes()).padStart(2, "0");
+      document.getElementById("clock").textContent = `${h}:${m}`;
+    }
+
+    function toMinutes(t) {
+      const [h,m] = t.split(":").map(Number);
+      return h*60 + m;
+    }
+
+    function findLecture(batch) {
+      const today = new Date();
+      const dayNames = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+      const day = dayNames[today.getDay()];
+      const timetable = schedule[batch][day];
+      if (!timetable) return {ongoing:null,next:null};
+
+      const nowM = today.getHours()*60 + today.getMinutes();
+      let ongoing = null, next = null;
+      for (let i=0;i<timetable.length;i++){
+        const [s,e] = timetable[i];
+        const sm=toMinutes(s), em=toMinutes(e);
+        if (nowM>=sm && nowM<em) ongoing=timetable[i];
+        if (nowM<sm && !next) next=timetable[i];
+      }
+      return {ongoing,next};
+    }
+
+    function updateLecture(){
+      const batch = localStorage.getItem("batch") || document.getElementById("batch").value;
+      const {ongoing,next} = findLecture(batch);
+      const now = new Date();
+      if (ongoing){
+        document.getElementById("ongoing").textContent = `Ongoing: ${ongoing[2]} - ${ongoing[3]}`;
+        const rem = toMinutes(ongoing[1]) - (now.getHours()*60 + now.getMinutes());
+        const mm = String(Math.floor(rem%60)).padStart(2,"0");
+        const hh = String(Math.floor(rem/60)).padStart(2,"0");
+        document.getElementById("timer").textContent = `${hh}:${mm}`;
+      } else {
+        document.getElementById("ongoing").textContent = "Ongoing: None";
+        document.getElementById("timer").textContent = "--:--";
+      }
+      if (next) document.getElementById("next").textContent = `Next: ${next[2]} - ${next[0]}`;
+      else document.getElementById("next").textContent = "Next: None";
+    }
+
+    function renderTable(batch){
+      const grid = document.getElementById("timetable");
+      grid.innerHTML="";
+      const timetable = schedule[batch];
+      const today = new Date().getDay();
+      const days = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+      days.forEach((d,i)=>{
+        const card=document.createElement("div");
+        card.className="day-card"+(i+1===today?" highlight":"");
+        const title=document.createElement("div");
+        title.innerHTML=`<b>${d}</b>`;
+        card.appendChild(title);
+        (timetable[d]||[]).forEach(slot=>{
+          const div=document.createElement("div");
+          div.className="slot";
+          div.textContent=`${slot[0]}-${slot[1]}  ${slot[2]}  ${slot[3]}`;
+          card.appendChild(div);
         });
-        card.appendChild(s);
+        grid.appendChild(card);
       });
-      container.appendChild(card);
-    });
-  }
+    }
 
-  document.getElementById('refreshBtn').addEventListener('click', ()=>location.reload());
-  window.addEventListener('load', ()=>build());
+    function saveBatch(){
+      const b=document.getElementById("batch").value;
+      localStorage.setItem("batch",b);
+      renderTable(b);
+    }
 
-  // PWA install prompt handling
-  let deferredPrompt;
-  const installBtn = document.getElementById('installBtn');
-  window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    deferredPrompt = e;
-    installBtn.style.display = 'inline-block';
-  });
-  installBtn.addEventListener('click', async () => {
-    if (!deferredPrompt) return;
-    deferredPrompt.prompt();
-    const choice = await deferredPrompt.userChoice;
-    deferredPrompt = null;
-    installBtn.style.display = 'none';
-  });
+    function init(){
+      const b=localStorage.getItem("batch")||"D1";
+      document.getElementById("batch").value=b;
+      renderTable(b);
+      updateClock();
+      updateLecture();
+      setInterval(updateClock,60000);
+      setInterval(updateLecture,60000);
+    }
 
-  // register service worker
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/service-worker.js').catch(()=>{});
-  }
+    window.onload=init;
   </script>
 </body>
 </html>
+
