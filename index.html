@@ -330,6 +330,68 @@ document.getElementById("timer").textContent = `${hh}:${mm}:${ss}`;
     }
 
     window.onload=init;
+    // === Confetti burst after 4 PM ===
+function launchConfetti(){
+  const now = new Date();
+  const currentSeconds = now.getHours()*3600 + now.getMinutes()*60 + now.getSeconds();
+  const endOfDay = 16*3600; // 4:00 PM
+
+  // Only run if it's after 4 PM
+  if (currentSeconds < endOfDay) return;
+
+  const canvas = document.createElement("canvas");
+  canvas.style.position = "fixed";
+  canvas.style.top = "0";
+  canvas.style.left = "0";
+  canvas.style.width = "100%";
+  canvas.style.height = "100%";
+  canvas.style.pointerEvents = "none";
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  document.body.appendChild(canvas);
+
+  const ctx = canvas.getContext("2d");
+  const pieces = Array.from({ length: 160 }).map(() => ({
+    x: Math.random() * canvas.width,
+    y: Math.random() * canvas.height * 0.3,
+    r: Math.random() * 6 + 2,
+    c: `hsl(${Math.random() * 360}, 90%, 55%)`,
+    vx: (Math.random() - 0.5) * 6,
+    vy: Math.random() * 4 + 2,
+    rot: Math.random() * 360,
+    vr: (Math.random() - 0.5) * 10,
+  }));
+
+  let start = null;
+  function step(ts) {
+    if (!start) start = ts;
+    const t = ts - start;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    pieces.forEach((p) => {
+      p.x += p.vx;
+      p.y += p.vy;
+      p.rot += p.vr;
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate((p.rot * Math.PI) / 180);
+      ctx.fillStyle = p.c;
+      ctx.fillRect(-p.r / 2, -p.r / 2, p.r, p.r);
+      ctx.restore();
+    });
+    if (t < 7000) requestAnimationFrame(step); // 7 seconds
+    else {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      canvas.remove();
+    }
+  }
+  requestAnimationFrame(step);
+}
+
+// Run confetti automatically if college is over
+window.addEventListener("load", () => {
+  setTimeout(launchConfetti, 1000);
+});
+
   </script>
 </body>
 </html>
