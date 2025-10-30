@@ -268,17 +268,40 @@
       const batch=localStorage.getItem("batch")||document.getElementById("batch").value;
       const {ongoing,next}=findLecture(batch);
       const now=new Date();
-      if(ongoing){
-        document.getElementById("ongoing").textContent=`Ongoing: ${ongoing[2]} (${ongoing[3]||""})`;
-        const rem=toMinutes(ongoing[1])-(now.getHours()*60+now.getMinutes());
-        const mm=String(rem%60).padStart(2,"0");
-        const hh=String(Math.floor(rem/60)).padStart(2,"0");
-const ss = String(now.getSeconds()).padStart(2, "0");
-document.getElementById("timer").textContent = `${hh}:${mm}:${ss}`;
-      }else{
-        document.getElementById("ongoing").textContent="Finally over 😂";
-        document.getElementById("timer").textContent="--:--";
-      }
+     if(ongoing){
+  // add 🍱 for breaks
+  let subj = ongoing[2];
+  if(/break/i.test(subj) || /lunch/i.test(subj)) subj += " 🍱";
+  document.getElementById("ongoing").textContent = `Ongoing: ${subj} (${ongoing[3]||""})`;
+
+  const remMins = toMinutes(ongoing[1]) - (now.getHours()*60 + now.getMinutes());
+  const remSecs = (remMins*60) - now.getSeconds();
+  const hh = String(Math.floor(remSecs/3600)).padStart(2,"0");
+  const mm = String(Math.floor((remSecs%3600)/60)).padStart(2,"0");
+  const ss = String(remSecs%60).padStart(2,"0");
+  document.getElementById("timer").textContent = `${hh}:${mm}:${ss}`;
+
+}else{
+  const totalNow = now.getHours()*60 + now.getMinutes();
+  const collegeStart = 9*60 + 15; // 9:15
+  const collegeEnd = 16*60;       // 4:00
+
+  if(totalNow < collegeStart){
+    document.getElementById("ongoing").textContent = "College starts soon ⏰";
+    const diff = (collegeStart - totalNow)*60 - now.getSeconds();
+    const hh = String(Math.floor(diff/3600)).padStart(2,"0");
+    const mm = String(Math.floor((diff%3600)/60)).padStart(2,"0");
+    const ss = String(diff%60).padStart(2,"0");
+    document.getElementById("timer").textContent = `${hh}:${mm}:${ss}`;
+  } else if(totalNow >= collegeEnd){
+    document.getElementById("ongoing").textContent = "Day complete! Time to chill 😎";
+    document.getElementById("timer").textContent = "🎉🎉🎉";
+  } else {
+    document.getElementById("ongoing").textContent = "Finally over 😂";
+    document.getElementById("timer").textContent = "💤";
+  }
+}
+
       if(next)document.getElementById("next").textContent=`Next: ${next[2]} (${next[3]||""}) at ${next[0]}`;
       else document.getElementById("next").textContent="Next: None";
     }
@@ -306,9 +329,12 @@ document.getElementById("timer").textContent = `${hh}:${mm}:${ss}`;
     }
 
     function saveBatch(){
-      const b=document.getElementById("batch").value;
-      localStorage.setItem("batch",b);
-      renderTable(b);
+  const b = document.getElementById("batch").value;
+  localStorage.setItem("batch", b);
+  renderTable(b);
+  updateLecture();
+}
+
     }
 
     function analogClock(){
