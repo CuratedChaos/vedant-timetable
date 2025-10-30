@@ -120,8 +120,8 @@
 
   <div class="grid" id="timetable"></div>
 
-  <script>
-    const schedule={
+ <script>
+  const schedule = {
       D1:{
         Monday:[
           ["09:15","10:05","LAUC(SC)","A207"],
@@ -248,176 +248,163 @@
 
     function toMinutes(t){const [h,m]=t.split(":").map(Number);return h*60+m;}
 
-    function findLecture(batch){
-      const dayNames=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
-      const today=new Date();const day=dayNames[today.getDay()];
-      const nowM=today.getHours()*60+today.getMinutes();
-      const timetable=schedule[batch][day];
-      if(!timetable)return{ongoing:null,next:null};
-      let ongoing=null,next=null;
-      for(let i=0;i<timetable.length;i++){
-        const [s,e]=timetable[i];
-        const sm=toMinutes(s),em=toMinutes(e);
-        if(nowM>=sm&&nowM<em)ongoing=timetable[i];
-        if(nowM<sm&&!next)next=timetable[i];
+  function findLecture(batch){
+    const dayNames=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+    const today=new Date();const day=dayNames[today.getDay()];
+    const nowM=today.getHours()*60+today.getMinutes();
+    const timetable=schedule[batch][day];
+    if(!timetable)return{ongoing:null,next:null};
+    let ongoing=null,next=null;
+    for(let i=0;i<timetable.length;i++){
+      const [s,e]=timetable[i];
+      const sm=toMinutes(s),em=toMinutes(e);
+      if(nowM>=sm&&nowM<em)ongoing=timetable[i];
+      if(nowM<sm&&!next)next=timetable[i];
+    }
+    return{ongoing,next};
+  }
+
+  function updateLecture(){
+    const batch=localStorage.getItem("batch")||document.getElementById("batch").value;
+    const {ongoing,next}=findLecture(batch);
+    const now=new Date();
+
+    if(ongoing){
+      let subj = ongoing[2];
+      if(/break/i.test(subj) || /lunch/i.test(subj)) subj += " 🍱";
+      document.getElementById("ongoing").textContent = `Ongoing: ${subj} (${ongoing[3]||""})`;
+
+      const remMins = toMinutes(ongoing[1]) - (now.getHours()*60 + now.getMinutes());
+      const remSecs = (remMins*60) - now.getSeconds();
+      const hh = String(Math.floor(remSecs/3600)).padStart(2,"0");
+      const mm = String(Math.floor((remSecs%3600)/60)).padStart(2,"0");
+      const ss = String(remSecs%60).padStart(2,"0");
+      document.getElementById("timer").textContent = `${hh}:${mm}:${ss}`;
+    } else {
+      const totalNow = now.getHours()*60 + now.getMinutes();
+      const collegeStart = 9*60 + 15;
+      const collegeEnd = 16*60;
+
+      if(totalNow < collegeStart){
+        document.getElementById("ongoing").textContent = "College starts soon ⏰";
+        const diff = (collegeStart - totalNow)*60 - now.getSeconds();
+        const hh = String(Math.floor(diff/3600)).padStart(2,"0");
+        const mm = String(Math.floor((diff%3600)/60)).padStart(2,"0");
+        const ss = String(diff%60).padStart(2,"0");
+        document.getElementById("timer").textContent = `${hh}:${mm}:${ss}`;
+      } else if(totalNow >= collegeEnd){
+        document.getElementById("ongoing").textContent = "Day complete! Time to chill 😎";
+        document.getElementById("timer").textContent = "🎉🎉🎉";
+      } else {
+        document.getElementById("ongoing").textContent = "Finally over 😂";
+        document.getElementById("timer").textContent = "💤";
       }
-      return{ongoing,next};
     }
 
-    function updateLecture(){
-      const batch=localStorage.getItem("batch")||document.getElementById("batch").value;
-      const {ongoing,next}=findLecture(batch);
-      const now=new Date();
-     if(ongoing){
-  // add 🍱 for breaks
-  let subj = ongoing[2];
-  if(/break/i.test(subj) || /lunch/i.test(subj)) subj += " 🍱";
-  document.getElementById("ongoing").textContent = `Ongoing: ${subj} (${ongoing[3]||""})`;
-
-  const remMins = toMinutes(ongoing[1]) - (now.getHours()*60 + now.getMinutes());
-  const remSecs = (remMins*60) - now.getSeconds();
-  const hh = String(Math.floor(remSecs/3600)).padStart(2,"0");
-  const mm = String(Math.floor((remSecs%3600)/60)).padStart(2,"0");
-  const ss = String(remSecs%60).padStart(2,"0");
-  document.getElementById("timer").textContent = `${hh}:${mm}:${ss}`;
-
-}else{
-  const totalNow = now.getHours()*60 + now.getMinutes();
-  const collegeStart = 9*60 + 15; // 9:15
-  const collegeEnd = 16*60;       // 4:00
-
-  if(totalNow < collegeStart){
-    document.getElementById("ongoing").textContent = "College starts soon ⏰";
-    const diff = (collegeStart - totalNow)*60 - now.getSeconds();
-    const hh = String(Math.floor(diff/3600)).padStart(2,"0");
-    const mm = String(Math.floor((diff%3600)/60)).padStart(2,"0");
-    const ss = String(diff%60).padStart(2,"0");
-    document.getElementById("timer").textContent = `${hh}:${mm}:${ss}`;
-  } else if(totalNow >= collegeEnd){
-    document.getElementById("ongoing").textContent = "Day complete! Time to chill 😎";
-    document.getElementById("timer").textContent = "🎉🎉🎉";
-  } else {
-    document.getElementById("ongoing").textContent = "Finally over 😂";
-    document.getElementById("timer").textContent = "💤";
+    if(next)document.getElementById("next").textContent=`Next: ${next[2]} (${next[3]||""}) at ${next[0]}`;
+    else document.getElementById("next").textContent="Next: None";
   }
-}
 
-      if(next)document.getElementById("next").textContent=`Next: ${next[2]} (${next[3]||""}) at ${next[0]}`;
-      else document.getElementById("next").textContent="Next: None";
-    }
-
-    function renderTable(batch){
-      const grid=document.getElementById("timetable");
-      grid.innerHTML="";
-      const timetable=schedule[batch];
-      const today=new Date().getDay();
-      const days=["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
-      days.forEach((d,i)=>{
-        const card=document.createElement("div");
-        card.className="day-card"+(i+1===today?" highlight":"");
-        const title=document.createElement("div");
-        title.innerHTML=`<b>${d}</b>`;
-        card.appendChild(title);
-        (timetable[d]||[]).forEach(slot=>{
-          const div=document.createElement("div");
-          div.className="slot";
-          div.innerHTML=`<div class='sub'>${slot[2]}</div><div class='time'>${slot[0]}-${slot[1]}</div><div class='fac'>${slot[3]}</div>`;
-          card.appendChild(div);
-        });
-        grid.appendChild(card);
+  function renderTable(batch){
+    const grid=document.getElementById("timetable");
+    grid.innerHTML="";
+    const timetable=schedule[batch];
+    const today=new Date().getDay();
+    const days=["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+    days.forEach((d,i)=>{
+      const card=document.createElement("div");
+      card.className="day-card"+(i+1===today?" highlight":"");
+      const title=document.createElement("div");
+      title.innerHTML=`<b>${d}</b>`;
+      card.appendChild(title);
+      (timetable[d]||[]).forEach(slot=>{
+        const div=document.createElement("div");
+        div.className="slot";
+        div.innerHTML=`<div class='sub'>${slot[2]}</div><div class='time'>${slot[0]}-${slot[1]}</div><div class='fac'>${slot[3]}</div>`;
+        card.appendChild(div);
       });
-    }
-
-    function saveBatch(){
-  const b = document.getElementById("batch").value;
-  localStorage.setItem("batch", b);
-  renderTable(b);
-  updateLecture();
-}
-
-    }
-
-    function analogClock(){
-      const now=new Date();
-      const sec=now.getSeconds(),min=now.getMinutes(),hr=now.getHours()%12;
-      document.getElementById("sec").style.transform=`translate(-50%,-100%) rotate(${sec*6}deg)`;
-      document.getElementById("min").style.transform=`translate(-50%,-100%) rotate(${min*6}deg)`;
-      document.getElementById("hour").style.transform=`translate(-50%,-100%) rotate(${(hr*30)+(min/2)}deg)`;
-    }
-
-    function init(){
-      const b=localStorage.getItem("batch")||"D1";
-      document.getElementById("batch").value=b;
-      renderTable(b);
-      updateLecture();
-      analogClock();
-      setInterval(updateLecture,60000);
-      setInterval(analogClock,1000);
-    }
-
-    window.onload=init;
-    // === Confetti burst after 4 PM ===
-function launchConfetti(){
-  const now = new Date();
-  const currentSeconds = now.getHours()*3600 + now.getMinutes()*60 + now.getSeconds();
-  const endOfDay = 16*3600; // 4:00 PM
-
-  // Only run if it's after 4 PM
-  if (currentSeconds < endOfDay) return;
-
-  const canvas = document.createElement("canvas");
-  canvas.style.position = "fixed";
-  canvas.style.top = "0";
-  canvas.style.left = "0";
-  canvas.style.width = "100%";
-  canvas.style.height = "100%";
-  canvas.style.pointerEvents = "none";
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-  document.body.appendChild(canvas);
-
-  const ctx = canvas.getContext("2d");
-  const pieces = Array.from({ length: 160 }).map(() => ({
-    x: Math.random() * canvas.width,
-    y: Math.random() * canvas.height * 0.3,
-    r: Math.random() * 6 + 2,
-    c: `hsl(${Math.random() * 360}, 90%, 55%)`,
-    vx: (Math.random() - 0.5) * 6,
-    vy: Math.random() * 4 + 2,
-    rot: Math.random() * 360,
-    vr: (Math.random() - 0.5) * 10,
-  }));
-
-  let start = null;
-  function step(ts) {
-    if (!start) start = ts;
-    const t = ts - start;
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    pieces.forEach((p) => {
-      p.x += p.vx;
-      p.y += p.vy;
-      p.rot += p.vr;
-      ctx.save();
-      ctx.translate(p.x, p.y);
-      ctx.rotate((p.rot * Math.PI) / 180);
-      ctx.fillStyle = p.c;
-      ctx.fillRect(-p.r / 2, -p.r / 2, p.r, p.r);
-      ctx.restore();
+      grid.appendChild(card);
     });
-    if (t < 7000) requestAnimationFrame(step); // 7 seconds
-    else {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      canvas.remove();
-    }
   }
-  requestAnimationFrame(step);
-}
 
-// Run confetti automatically if college is over
-window.addEventListener("load", () => {
-  setTimeout(launchConfetti, 1000);
-});
+  function saveBatch(){
+    const b=document.getElementById("batch").value;
+    localStorage.setItem("batch",b);
+    renderTable(b);
+    updateLecture();
+  }
 
-  </script>
+  function analogClock(){
+    const now=new Date();
+    const sec=now.getSeconds(),min=now.getMinutes(),hr=now.getHours()%12;
+    document.getElementById("sec").style.transform=`translate(-50%,-100%) rotate(${sec*6}deg)`;
+    document.getElementById("min").style.transform=`translate(-50%,-100%) rotate(${min*6}deg)`;
+    document.getElementById("hour").style.transform=`translate(-50%,-100%) rotate(${(hr*30)+(min/2)}deg)`;
+  }
+
+  function launchConfetti(){
+    const now = new Date();
+    const currentSeconds = now.getHours()*3600 + now.getMinutes()*60 + now.getSeconds();
+    const endOfDay = 16*3600; // 4:00 PM
+    if (currentSeconds < endOfDay) return;
+
+    const canvas = document.createElement("canvas");
+    canvas.style.position = "fixed";
+    canvas.style.top = "0";
+    canvas.style.left = "0";
+    canvas.style.width = "100%";
+    canvas.style.height = "100%";
+    canvas.style.pointerEvents = "none";
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    document.body.appendChild(canvas);
+
+    const ctx = canvas.getContext("2d");
+    const pieces = Array.from({ length: 160 }).map(() => ({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height * 0.3,
+      r: Math.random() * 6 + 2,
+      c: `hsl(${Math.random() * 360}, 90%, 55%)`,
+      vx: (Math.random() - 0.5) * 6,
+      vy: Math.random() * 4 + 2,
+      rot: Math.random() * 360,
+      vr: (Math.random() - 0.5) * 10,
+    }));
+
+    let start = null;
+    function step(ts) {
+      if (!start) start = ts;
+      const t = ts - start;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      pieces.forEach((p) => {
+        p.x += p.vx;
+        p.y += p.vy;
+        p.rot += p.vr;
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate((p.rot * Math.PI) / 180);
+        ctx.fillStyle = p.c;
+        ctx.fillRect(-p.r / 2, -p.r / 2, p.r, p.r);
+        ctx.restore();
+      });
+      if (t < 7000) requestAnimationFrame(step);
+      else { ctx.clearRect(0, 0, canvas.width, canvas.height); canvas.remove(); }
+    }
+    requestAnimationFrame(step);
+  }
+
+  function init(){
+    const b=localStorage.getItem("batch")||"D1";
+    document.getElementById("batch").value=b;
+    renderTable(b);
+    updateLecture();
+    analogClock();
+    setInterval(updateLecture,1000); // seconds refresh
+    setInterval(analogClock,1000);
+    setTimeout(launchConfetti,1000);
+  }
+
+  window.onload=init;
+</script>
 </body>
 </html>
